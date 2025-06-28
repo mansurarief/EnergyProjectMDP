@@ -1,6 +1,30 @@
 # EnergyProjectMDP
 
-## Pushing changes to Github
+
+## Setting up the codespace
+
+1. Activate your environment
+
+```bash
+julia --project=.
+```
+
+2. Install all the dependencies
+
+```bash
+]instantiate
+```
+
+3. Go to the code examples and run the REPL (a new terminal that will open when you run codes line by line)
+
+
+## Pushing changes to Github (works only on the terminal/bash level command)
+
+To get out of "julia" or REPL, type
+
+```bash
+exit()
+```
 
 1. Git status
 
