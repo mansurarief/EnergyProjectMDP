@@ -1,4 +1,4 @@
-module EnergyProjectMDPs
+module EnergyProjectMDP
 
 using Parameters
 
