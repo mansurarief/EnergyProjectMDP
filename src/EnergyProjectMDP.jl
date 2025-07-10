@@ -6,15 +6,12 @@ using POMDPTools
 
 
 include("mdp.jl")
-export hello_world,
-         City,
+export City,
          State,
          newAction,
          doNothing,
          Action,
-         EnergyMDP,
-         transition, 
-         reward
+         EnergyMDP
 
 
 end # module EnergyProjectMDPs
