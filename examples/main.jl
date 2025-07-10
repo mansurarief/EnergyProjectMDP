@@ -4,10 +4,12 @@ using EnergyProjectMDP
 
 atlanta = City(10.0, 0.0, 8.0, 4e6, 1)
 stanford = City(demand=12.0, re_supply=0.0, nre_supply=8.0, population=4e6, income = 0)
+nyc = City(demand=25.0, re_supply=5.0, nre_supply=15.0, population=8.5e6, income=0)
+houston = City(demand=20.0, re_supply=10.0, nre_supply=8.0, population=2.3e6, income=1)
 
 
 total_demands = atlanta.demand + stanford.demand
-cities = [atlanta, stanford]
+cities = [atlanta, stanford, nyc, houston, detroit]
 sum([city.demand for city in cities])
 
 
@@ -76,3 +78,4 @@ s1 = transition(MDPproblem, s0, a0)
 
 a1 = newAction(0,1)
 s2 = transition(MDPproblem, s1, a1)
+

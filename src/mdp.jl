@@ -41,9 +41,9 @@ const Action = Union{newAction, doNothing}
     operatingCostNRE::Vector{Float64} = [0.001, 0.0015]
     supplyOfRE::Float64 = 200
     supplyOfNRE::Float64 = 200
-    weightBudget::Float64 = 0.5 # maximize remaining budget
-    weightLowIncomeWithoutEnergy::Float64 = -10.0 # minimize low income population without energy
-    weightPopulationWithRE::Float64 = 5.0 # maximize population with RE
+    weightBudget::Float64 = 0.2 # maximize remaining budget
+    weightLowIncomeWithoutEnergy::Float64 = -15.0 # minimize low income population without energy
+    weightPopulationWithRE::Float64 = 8.0 # maximize population with RE
 end
 
 function transition(p::EnergyMDP, s::State, a::Action)

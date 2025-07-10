@@ -23,5 +23,11 @@ println("Reward after action: ", r1)
 s2 = transition(p, s1, a1)
 println("State after action: ", s2)
 
+a2 = newAction(1, 1)
+s3 = transition(p, s2, a2)
+r3 = reward(p, s3, a2)
+println("Action: Add NRE")
+print_state(s3)
+println("Reward: ", r3)
 
 
