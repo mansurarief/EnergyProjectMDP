@@ -13,5 +13,7 @@ export City,
          Action,
          EnergyMDP
 
+include("functions.jl")
+
 
 end # module EnergyProjectMDPs

@@ -135,8 +135,8 @@ cities = [atlanta, nyc, houston, phoenix, denver, memphis, seattle, san_antonio]
     
     # === SUPPLY CONSTRAINTS (GW available for deployment) ===
     # Representing policy/economic limits on new capacity additions per period
-    supplyOfRE::Float64 = 100.0             # 100 GW of RE available (reflects supply chain constraints)
-    supplyOfNRE::Float64 = 100.0             # 50 GW of NRE available (limited due to climate policies)
+    supplyOfRE::Float64 = 10.0             # 100 GW of RE available (reflects supply chain constraints)
+    supplyOfNRE::Float64 = 10.0             # 50 GW of NRE available (limited due to climate policies)
     
     # === POLICY OBJECTIVE WEIGHTS ===
     # Based on energy justice and policy literature

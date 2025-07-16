@@ -8,62 +8,87 @@ function POMDPs.transition(p::EnergyMDP, s::State, a::Action)
         # update the cities with the new renewable energy supply
         newCities = deepcopy(s.cities)
         for (i, city) in enumerate(newCities)
-            newCities[i] = City(demand = city.demand,
-                                re_supply = city.re_supply + p.supplyOfRE,
-                                nre_supply = city.nre_supply,
-                                population = city.population,
-                                income = city.income)
+            if (i == a.cityIndex) # only update the city specified in the action
+                # if action is adding renewable energy
+                newCities[i] = City(demand = city.demand,
+                                    name = city.name,
+                                    re_supply = city.re_supply + p.supplyOfRE,
+                                    nre_supply = city.nre_supply,
+                                    population = city.population,
+                                    income = city.income)       
+            else
+                newCities[i] = city # keep other cities unchanged    
+            end
         end
         # create a new state with the updated budget and cities
         sp = State(b = bp, cities = newCities, total_demand = s.total_demand)
         return Deterministic(sp)
 
-    else if (a.energyType==1 && a.actionType == 1) #adding NRE
+    elseif (a.energyType==1 && a.actionType == 1) #adding NRE
         # if action is adding non-renewable energy
         bp = s.b - p.costOfAddingNRE - sum([(city.re_supply) * p.operatingCostRE[i] + (city.nre_supply + p.supplyOfNRE) * p.operatingCostNRE[i] for (i,city) in enumerate(s.cities)]) 
 
         # update the cities with the new non-renewable energy supply
         newCities = deepcopy(s.cities)
         for (i, city) in enumerate(newCities)
-            newCities[i] = City(demand = city.demand,
-                                re_supply = city.re_supply,
-                                nre_supply = city.nre_supply + p.supplyOfNRE,
-                                population = city.population,
-                                income = city.income)
+            if (i == a.cityIndex) # only update the city specified in the action
+                # if action is adding non-renewable energy
+                newCities[i] = City(demand = city.demand,
+                                    name = city.name,
+                                    re_supply = city.re_supply,
+                                    nre_supply = city.nre_supply + p.supplyOfNRE,
+                                    population = city.population,
+                                    income = city.income)
+            else
+                newCities[i] = city # keep other cities unchanged    
+            end
         end
+        
         # create a new state with the updated budget and cities
         sp = State(b = bp, cities = newCities, total_demand = s.total_demand)
         return Deterministic(sp)
     
-    else if (a.energyType==0 && a.actionType == 0) #removing RE
+    elseif (a.energyType==0 && a.actionType == 0) #removing RE
         # if action is removing renewable energy
         bp = s.b + p.costOfRemovingRE - sum([(city.re_supply - p.supplyOfRE) * p.operatingCostRE[i] + city.nre_supply * p.operatingCostNRE[i] for (i,city) in enumerate(s.cities)]) 
 
         # update the cities with the new renewable energy supply
         newCities = deepcopy(s.cities)
         for (i, city) in enumerate(newCities)
-            newCities[i] = City(demand = city.demand,
-                                re_supply = city.re_supply - p.supplyOfRE,
-                                nre_supply = city.nre_supply,
-                                population = city.population,
-                                income = city.income)
+            if (i == a.cityIndex) # only update the city specified in the action
+                # if action is removing renewable energy
+                newCities[i] = City(demand = city.demand,
+                                    name = city.name,
+                                    re_supply = city.re_supply - p.supplyOfRE,
+                                    nre_supply = city.nre_supply,
+                                    population = city.population,
+                                    income = city.income)
+            else
+                newCities[i] = city # keep other cities unchanged    
+            end
         end
         # create a new state with the updated budget and cities
         sp = State(b = bp, cities = newCities, total_demand = s.total_demand)
         return Deterministic(sp)
 
-    else if (a.energyType==1 && a.actionType == 0) #removing NRE
+    elseif (a.energyType==1 && a.actionType == 0) #removing NRE
         # if action is removing non-renewable energy
 
         bp = s.b + p.costOfRemovingNRE - sum([(city.re_supply) * p.operatingCostRE[i] + (city.nre_supply - p.supplyOfNRE) * p.operatingCostNRE[i] for (i,city) in enumerate(s.cities)])
         # update the cities with the new non-renewable energy supply
         newCities = deepcopy(s.cities)
         for (i, city) in enumerate(newCities)
-            newCities[i] = City(demand = city.demand,
-                                re_supply = city.re_supply,
-                                nre_supply = city.nre_supply - p.supplyOfNRE, 
-                                population = city.population,
-                                income = city.income)
+            if (i == a.cityIndex) # only update the city specified in the action
+                # if action is removing non-renewable energy
+                newCities[i] = City(demand = city.demand,
+                                    name = city.name,
+                                    re_supply = city.re_supply,
+                                    nre_supply = city.nre_supply - p.supplyOfNRE,
+                                    population = city.population,
+                                    income = city.income)
+            else
+                newCities[i] = city # keep other cities unchanged    
+            end
         end
         # create a new state with the updated budget and cities
         sp = State(b = bp, cities = newCities, total_demand = s.total_demand)
@@ -121,3 +146,35 @@ function POMDPs.initialstate(p::EnergyMDP)
     s0 = State(b = p.initialBudget, cities = initialCities, total_demand = sum([city.demand for city in initialCities]))
     return Deterministic(s0)
 end
+
+#iterate all actions
+function POMDPs.actions(p::EnergyMDP)
+    actions = Action[]
+
+    #add do nothing action
+    push!(actions, doNothing())
+
+    for i in 1:p.numberOfCities
+        # add renewable NRE actions
+        push!(actions, newAction(energyType=false, actionType=false, cityIndex=i))
+        push!(actions, newAction(energyType=false, actionType=true, cityIndex=i))
+        # add non-renewable RE actions
+        push!(actions, newAction(energyType=true, actionType=false, cityIndex=i))
+        push!(actions, newAction(energyType=true, actionType=true, cityIndex=i))
+    end
+
+    return actions
+end
+
+function POMDPs.actionindex(p::EnergyMDP, a::Action)
+    # find the index of the action in the list of actions
+    actions = POMDPs.actions(p)
+    for (index, action) in enumerate(actions)
+        if action == a
+            return index
+        end
+    end
+    return nothing  # action not found
+end
+
+
