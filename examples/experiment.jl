@@ -66,3 +66,38 @@ end
 
 # Action items for Riya: create your own policy, and run it, and report the rewards
 
+function my_policy(state::State, mdp::EnergyMDP)
+    deficits = [(city.demand - city.re_supply - city.nre_supply, i) for (i, city) in enumerate(state.cities)]
+    sorted_deficits = sort(deficits, by = x -> -x[1])  # descending order by deficit
+    city_idx = sorted_deficits[1][2]  # city index with largest deficit
+    return newAction(energyType=false, actionType=true, cityIndex=city_idx)
+end
+
+# --- Policy-driven simulation ---
+println("=== Policy-driven Simulation ===")
+
+s0 = rand(rng, initialstate(p))
+s = s0   # reset to initial state
+total_reward = 0.0
+max_steps = 10  # limit number of steps so it won't run forever
+
+for step in 1:max_steps
+    a = my_policy(s, p)                   # get action from policy
+    sp = rand(transition(p, s, a))       # apply action and get new state
+    r = reward(p, s, a)                   # calculate reward
+    
+    println("Step $step: Add RE to city $(a.cityIndex)")
+    println("  Budget: $(s.b) -> $(sp.b)")
+    println("  City $(a.cityIndex) RE: $(s.cities[a.cityIndex].re_supply) -> $(sp.cities[a.cityIndex].re_supply)")
+    println("  Reward: $r\n")
+    
+    s = sp
+    total_reward += r
+    
+    if isterminal(p, s)
+        println("Terminal state reached at step $step")
+        break
+    end
+end
+
+println("Total reward over $(step) steps: $total_reward")
