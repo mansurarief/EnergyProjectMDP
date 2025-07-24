@@ -1,81 +1,78 @@
 using EnergyProjectMDP
-# using Plots
+using POMDPs
+using DiscreteValueIteration
+using Random
+using Printf
 
+rng = MersenneTwister(1234)
+mdp = initialize_mdp(rng)
+println("Created MDP with $(mdp.numberOfCities) cities")
+println("Initial budget: \$$(mdp.initialBudget)M")
+println("State space size: $(length(states(mdp))) states")
+println("Action space size: $(length(actions(mdp))) actions\n")
 
-atlanta = City(10.0, 0.0, 8.0, 4e6, 1)
-stanford = City(demand=12.0, re_supply=0.0, nre_supply=8.0, population=4e6, income = 0)
-nyc = City(demand=25.0, re_supply=5.0, nre_supply=15.0, population=8.5e6, income=0)
-houston = City(demand=20.0, re_supply=10.0, nre_supply=8.0, population=2.3e6, income=1)
+# Test all policies including new stronger benchmarks
+policies_to_test = [
+    ("Random", RandomEnergyPolicy(rng)),
+    ("Equality First", EquityFirstPolicy()),    
+    ("Expert", ExpertPolicy())
+]
 
+println("Evaluating $(length(policies_to_test)) policies...")
+results = Dict{String, Dict{String, Float64}}()
 
-total_demands = atlanta.demand + stanford.demand
-cities = [atlanta, stanford, nyc, houston, detroit]
-sum([city.demand for city in cities])
-
-
-
-function calc_nre_percentage(s::State)
-    eps = 0.000001
-    total_demands = sum([city.demand for city in s.cities])
-    total_nres = sum([city.nre_supply for city in s.cities])
-    return total_nres/(total_demands + eps)
+for (name, policy) in policies_to_test
+    print("Evaluating $name... ")
+    # Use the same RNG for all policies to ensure fair comparison
+    rng = MersenneTwister(1234)
+    result = evaluate_policy_comprehensive(mdp, policy, 30, 12, rng)
+    results[name] = result
+    println("✓")
 end
 
-function calc_re_percentage(s::State)
-    eps = 0.000001
-    total_demands = sum([city.demand for city in s.cities])
-    total_re = sum([city.re_supply for city in s.cities])
-    return total_re/(total_demands + eps)
+# Test MDP Solvers
+println("\n" * "="^60)
+println("MDP SOLVER RUNNING...")
+println("="^60)
+
+# Test Value Iteration
+try
+    println("Testing Value Iteration...")
+    vi_solver = ValueIterationSolver(max_iterations=100, belres=1e-3, verbose=false)
+    vi_policy = solve(vi_solver, mdp)
+    println("✅ Value Iteration converged!")
+    
+    vi_result = evaluate_policy_comprehensive(mdp, vi_policy, 30, 12, rng)
+    results["Value Iteration"] = vi_result
+    
+    println("Value Iteration Performance:")
+    println("  Avg Reward: $(@sprintf("%.1f ± %.1f", vi_result["total_reward_mean"], vi_result["total_reward_std"]))")
+    
+    # Display reward components if available
+    if haskey(vi_result, "budget_reward_sum_mean")
+        println("  Reward Components:")
+        println("    Budget:        $(@sprintf("%8.1f ± %5.1f", vi_result["budget_reward_sum_mean"], vi_result["budget_reward_sum_std"]))")
+        println("    Equity Penalty: $(@sprintf("%8.1f ± %5.1f", vi_result["equity_penalty_reward_sum_mean"], vi_result["equity_penalty_reward_sum_std"]))")
+        println("    RE Bonus:      $(@sprintf("%8.1f ± %5.1f", vi_result["re_bonus_reward_sum_mean"], vi_result["re_bonus_reward_sum_std"]))")
+    end
+    
+catch e
+    println("❌ Value Iteration failed: $e")
 end
 
 
-s0 = State(b=10e6, total_demand=0.0, cities = [atlanta, stanford])
 
-
-calc_nre_percentage(s0)
-
-calc_re_percentage(s0)
-
-#plot and pkg are like parameters
-# using Pkg; Pkg.add("Plots")
-# using Plots; plot([1,2,3,4,5], [10,20,15,25,18])
-
-
-# bar([stanford.demand, atlanta.demand])
-
-
-# bar([city.nre_supply for city in s0.cities])
-
-function percentageOfLowIncomePopulation(s::State)
-    totalPopulation = sum([city.population for city in s.cities])
-    lowIncomePopulation = sum([city.population * (city.income == 0) for city in s.cities])
-    percentage = lowIncomePopulation/totalPopulation
-end
-
-percentageOfLowIncomePopulation(s0)
-
-
-
-
-MDPproblem = EnergyMDP()
-
-function transition(p::EnergyMDP, s::State, a::Action)
-    if (a.energyType==0 && a.actionType == 1)
-        bp = s.b - p.costOfAddingRE - sum([(city.re_supply + p.supplyOfRE) * p.operatingCostRE[i] + p.operatingCostNRE[i] * city.nre_supply for (i,city) in enumerate(s.cities)]) 
-
-    # newCities = deepcopy(s.cities)
-    # newCities = [city.re_supply = city.re_supply + p.supplyOfRE]
-        sp = State(b = bp, cities = s.cities, total_demand = s.total_demand)
-        return sp
-    else 
-        return s
+# Compare MDP solvers if available
+mdp_solvers = filter(k -> contains(k, "Iteration"), keys(results))
+if length(mdp_solvers) > 1
+    println("\n🤖 MDP Solver Comparison:")
+    for solver in mdp_solvers
+        solver_result = results[solver]
+        println("  $solver: $(@sprintf("%.1f ± %.1f", solver_result["total_reward_mean"], solver_result["total_reward_std"]))")
     end
 end
 
+println("\n🚀 Framework ready for energy policy optimization!")
 
-a0 = doNothing()
-s1 = transition(MDPproblem, s0, a0)
-
-a1 = newAction(0,1)
-s2 = transition(MDPproblem, s1, a1)
-
+# Print comprehensive comparison table at the end
+print_policy_comparison(results)

@@ -149,11 +149,18 @@ cities = [atlanta, nyc, houston, phoenix, denver, memphis, seattle, san_antonio]
     weightLowIncomeWithoutEnergy::Float64 = -25.0  # High penalty for low-income energy deprivation
     
     # Environmental/decarbonization goals
-    weightPopulationWithRE::Float64 = 12.0  # Strong incentive for renewable energy access
+    weightPopulationWithRE::Float64 = 10.0  # Strong incentive for renewable energy access
     
 
     # Planning horizon effects
     discountRate::Float64 = 0.95            # 5% social discount rate for long-term planning
 
     initialBudget::Float64 = 3000.0  # Initial budget in millions of dollars
+    
+    # Discretization parameters for solving
+    budgetDiscretization::Float64 = 100.0   # Discretize budget in steps of $100M
+    maxBudget::Float64 = 5000.0             # Maximum budget to consider
+    minBudget::Float64 = -500.0             # Minimum budget (can go negative for terminal)
+    energyDiscretization::Float64 = 2.0     # Discretize energy supply in steps of 2 GW
+    maxEnergyPerCity::Float64 = 100.0       # Maximum energy supply per city
 end

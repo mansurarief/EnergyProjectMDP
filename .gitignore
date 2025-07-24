@@ -1,2 +1,5 @@
 figs/SimRollout*
 figs/FullRollout*
+*.png
+*CLAUDE.md
+.claude
