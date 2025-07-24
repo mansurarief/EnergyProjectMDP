@@ -177,4 +177,127 @@ function POMDPs.actionindex(p::EnergyMDP, a::Action)
     return nothing  # action not found
 end
 
+# Generate all possible discrete states
+function POMDPs.states(p::EnergyMDP)
+    states = State[]
+    
+    # Discretize budget - use fewer budget levels for tractability
+    n_budget_levels = min(10, Int(ceil((p.maxBudget - p.minBudget) / p.budgetDiscretization)))
+    budget_values = range(p.minBudget, p.maxBudget, length=n_budget_levels)
+    
+    # Generate states by varying budget and limited city configurations
+    for budget in budget_values
+        # Original city configuration
+        push!(states, State(b = budget, cities = deepcopy(p.cities), 
+                           total_demand = sum([city.demand for city in p.cities])))
+        
+        # Add configurations with single energy additions to keep state space manageable
+        n_cities_to_vary = min(2, length(p.cities))  # Only vary first 2 cities
+        
+        for city_idx in 1:n_cities_to_vary
+            # State with added RE to one city
+            cities_re = deepcopy(p.cities)
+            if cities_re[city_idx].re_supply + p.supplyOfRE <= p.maxEnergyPerCity
+                cities_re[city_idx] = City(
+                    name = cities_re[city_idx].name,
+                    demand = cities_re[city_idx].demand,
+                    re_supply = cities_re[city_idx].re_supply + p.supplyOfRE,
+                    nre_supply = cities_re[city_idx].nre_supply,
+                    population = cities_re[city_idx].population,
+                    income = cities_re[city_idx].income
+                )
+                push!(states, State(b = budget, cities = cities_re, 
+                                   total_demand = sum([city.demand for city in cities_re])))
+            end
+            
+            # State with added NRE to one city
+            cities_nre = deepcopy(p.cities)
+            if cities_nre[city_idx].nre_supply + p.supplyOfNRE <= p.maxEnergyPerCity
+                cities_nre[city_idx] = City(
+                    name = cities_nre[city_idx].name,
+                    demand = cities_nre[city_idx].demand,
+                    re_supply = cities_nre[city_idx].re_supply,
+                    nre_supply = cities_nre[city_idx].nre_supply + p.supplyOfNRE,
+                    population = cities_nre[city_idx].population,
+                    income = cities_nre[city_idx].income
+                )
+                push!(states, State(b = budget, cities = cities_nre, 
+                                   total_demand = sum([city.demand for city in cities_nre])))
+            end
+        end
+    end
+    
+    return unique(states)
+end
+
+# Convert state to index for tabular methods
+function POMDPs.stateindex(p::EnergyMDP, s::State)
+    states_list = states(p)
+    
+    # First try exact match
+    for (idx, state) in enumerate(states_list)
+        if abs(state.b - s.b) < 1e-6 && 
+           length(state.cities) == length(s.cities) &&
+           all(abs(state.cities[i].re_supply - s.cities[i].re_supply) < 1e-6 && 
+               abs(state.cities[i].nre_supply - s.cities[i].nre_supply) < 1e-6 
+               for i in 1:length(state.cities))
+            return idx
+        end
+    end
+    
+    # If no exact match, find closest matching state
+    min_dist = Inf
+    best_idx = 1
+    
+    for (idx, state) in enumerate(states_list)
+        # Calculate distance based on budget and energy supplies
+        dist = abs(state.b - s.b)
+        for i in 1:length(s.cities)
+            dist += abs(state.cities[i].re_supply - s.cities[i].re_supply)
+            dist += abs(state.cities[i].nre_supply - s.cities[i].nre_supply)
+        end
+        
+        if dist < min_dist
+            min_dist = dist
+            best_idx = idx
+        end
+    end
+    
+    return best_idx
+end
+
+# Check if an action is valid in a given state
+function POMDPs.actions(p::EnergyMDP, s::State)
+    valid_actions = Action[]
+    
+    # Always can do nothing
+    push!(valid_actions, doNothing())
+    
+    for i in 1:length(s.cities)
+        city = s.cities[i]
+        
+        # Check if we can add RE (budget and supply constraints)
+        if s.b >= p.costOfAddingRE && city.re_supply + p.supplyOfRE <= p.maxEnergyPerCity
+            push!(valid_actions, newAction(energyType=false, actionType=true, cityIndex=i))
+        end
+        
+        # Check if we can remove RE
+        if city.re_supply >= p.supplyOfRE
+            push!(valid_actions, newAction(energyType=false, actionType=false, cityIndex=i))
+        end
+        
+        # Check if we can add NRE
+        if s.b >= p.costOfAddingNRE && city.nre_supply + p.supplyOfNRE <= p.maxEnergyPerCity
+            push!(valid_actions, newAction(energyType=true, actionType=true, cityIndex=i))
+        end
+        
+        # Check if we can remove NRE
+        if city.nre_supply >= p.supplyOfNRE
+            push!(valid_actions, newAction(energyType=true, actionType=false, cityIndex=i))
+        end
+    end
+    
+    return valid_actions
+end
+
 
