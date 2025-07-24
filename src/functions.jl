@@ -2,8 +2,9 @@ function POMDPs.transition(p::EnergyMDP, s::State, a::Action)
 
     # if action is adding (a.actionType==1) renewable energy (a.energyType==0)
     if (a.energyType==0 && a.actionType == 1)
-        # calculate new budget after adding renewable energy
-        bp = s.b - p.costOfAddingRE - sum([(city.re_supply + p.supplyOfRE) * p.operatingCostRE[i] + p.operatingCostNRE[i] * city.nre_supply for (i,city) in enumerate(s.cities)]) 
+        # calculate new budget after adding renewable energy - includes operating costs
+        additional_operating_cost = p.supplyOfRE * p.operatingCostRE[a.cityIndex]
+        bp = s.b - p.costOfAddingRE - additional_operating_cost 
 
         # update the cities with the new renewable energy supply
         newCities = deepcopy(s.cities)
@@ -25,8 +26,9 @@ function POMDPs.transition(p::EnergyMDP, s::State, a::Action)
         return Deterministic(sp)
 
     elseif (a.energyType==1 && a.actionType == 1) #adding NRE
-        # if action is adding non-renewable energy
-        bp = s.b - p.costOfAddingNRE - sum([(city.re_supply) * p.operatingCostRE[i] + (city.nre_supply + p.supplyOfNRE) * p.operatingCostNRE[i] for (i,city) in enumerate(s.cities)]) 
+        # if action is adding non-renewable energy - includes operating costs
+        additional_operating_cost = p.supplyOfNRE * p.operatingCostNRE[a.cityIndex]
+        bp = s.b - p.costOfAddingNRE - additional_operating_cost 
 
         # update the cities with the new non-renewable energy supply
         newCities = deepcopy(s.cities)
@@ -49,8 +51,12 @@ function POMDPs.transition(p::EnergyMDP, s::State, a::Action)
         return Deterministic(sp)
     
     elseif (a.energyType==0 && a.actionType == 0) #removing RE
-        # if action is removing renewable energy
-        bp = s.b + p.costOfRemovingRE - sum([(city.re_supply - p.supplyOfRE) * p.operatingCostRE[i] + city.nre_supply * p.operatingCostNRE[i] for (i,city) in enumerate(s.cities)]) 
+        # if action is removing renewable energy - removal costs money and reduces operating costs
+        operating_cost_reduction = p.supplyOfRE * p.operatingCostRE[a.cityIndex]
+        bp = s.b - p.costOfRemovingRE + operating_cost_reduction
+        
+        # Cap budget at initial budget to prevent unrealistic budget gains
+        bp = min(bp, p.initialBudget) 
 
         # update the cities with the new renewable energy supply
         newCities = deepcopy(s.cities)
@@ -72,9 +78,12 @@ function POMDPs.transition(p::EnergyMDP, s::State, a::Action)
         return Deterministic(sp)
 
     elseif (a.energyType==1 && a.actionType == 0) #removing NRE
-        # if action is removing non-renewable energy
-
-        bp = s.b + p.costOfRemovingNRE - sum([(city.re_supply) * p.operatingCostRE[i] + (city.nre_supply - p.supplyOfNRE) * p.operatingCostNRE[i] for (i,city) in enumerate(s.cities)])
+        # if action is removing non-renewable energy - removal costs money and reduces operating costs
+        operating_cost_reduction = p.supplyOfNRE * p.operatingCostNRE[a.cityIndex]
+        bp = s.b - p.costOfRemovingNRE + operating_cost_reduction
+        
+        # Cap budget at initial budget to prevent unrealistic budget gains
+        bp = min(bp, p.initialBudget)
         # update the cities with the new non-renewable energy supply
         newCities = deepcopy(s.cities)
         for (i, city) in enumerate(newCities)
@@ -107,7 +116,7 @@ function POMDPs.reward(p::EnergyMDP, s::State, a::Action)
     r = 0.0
 
     # remaining budget (+)
-    r += s.b * p.weightBudget
+    r += max(0, s.b) * p.weightBudget
 
     # low income population without energy (-)
     populationLowIncomeWithoutEnergy = sum([city.population * (city.income == 0 && city.re_supply +  city.nre_supply < city.demand) for city in s.cities])
@@ -141,10 +150,30 @@ function POMDPs.discount(p::EnergyMDP)
 end
 
 function POMDPs.initialstate(p::EnergyMDP)
-    # create an initial state with the budget and cities
-    initialCities = p.cities
-    s0 = State(b = p.initialBudget, cities = initialCities, total_demand = sum([city.demand for city in initialCities]))
-    return Deterministic(s0)
+    # create an initial state with the budget and cities with some stochasticity
+    return ImplicitDistribution() do rng
+        # Add small random variation to initial budget (±5%)
+        budget_variation = 1.0 + (rand(rng) - 0.5) * 0.1  # ±5% variation
+        initial_budget = p.initialBudget * budget_variation
+        
+        # Add small random variation to city demands (±10%)
+        stochastic_cities = City[]
+        for city in p.cities
+            demand_variation = 1.0 + (rand(rng) - 0.5) * 0.2  # ±10% variation
+            varied_demand = city.demand * demand_variation
+            push!(stochastic_cities, City(
+                demand = varied_demand,
+                name = city.name,
+                re_supply = city.re_supply,
+                nre_supply = city.nre_supply,
+                population = city.population,
+                income = city.income
+            ))
+        end
+        
+        total_demand = sum([city.demand for city in stochastic_cities])
+        return State(b = initial_budget, cities = stochastic_cities, total_demand = total_demand)
+    end
 end
 
 #iterate all actions

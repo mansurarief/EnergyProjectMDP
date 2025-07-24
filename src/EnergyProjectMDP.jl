@@ -4,6 +4,9 @@ using Parameters
 using POMDPs
 using POMDPTools
 using Random
+using Statistics
+using Printf
+
 
 
 include("mdp.jl")
@@ -30,7 +33,8 @@ export PriorityBasedPolicy,
 export RandomEnergyPolicy,
        GreedyREPolicy,
        BalancedEnergyPolicy,
-       EquityFirstPolicy
+       EquityFirstPolicy,
+       ExpertPolicy
 
 
 include("eval_reward.jl")
@@ -39,5 +43,13 @@ export calculate_comprehensive_metrics,
 
 include("init_mdp.jl")
 export initialize_mdp
+
+include("utils.jl")
+export evaluate_policy_comprehensive,
+       print_policy_comparison
+
+include("reward_analysis.jl")
+export decompose_reward,
+       analyze_reward_trajectory
 
 end # module EnergyProjectMDPs

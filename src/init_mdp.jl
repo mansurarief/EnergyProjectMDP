@@ -1,56 +1,62 @@
-function initialize_mdp()
-    # More balanced city configurations for testing equity
+function initialize_mdp(rng::AbstractRNG)
+    # Define discretized value ranges for randomization
+    demand_levels = [15.0, 18.0, 20.0, 22.0, 25.0, 28.0]  # Discretized demand levels
+    re_supply_levels = [0.0, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0]  # Discretized RE supply levels
+    nre_supply_levels = [4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 18.0, 20.0]  # Discretized NRE supply levels
+    population_levels = [500_000, 580_000, 620_000, 650_000, 700_000, 850_000]  # Discretized population levels
+    
+    # More balanced city configurations with discretized randomness
     atlanta = City(
         name="Atlanta",
-        demand=20.0,        # Standardized demands for fair comparison
-        re_supply=2.0,      # Some initial RE
-        nre_supply=8.0,     # But mostly NRE initially
-        population=600_000,
+        demand=rand(rng, demand_levels),
+        re_supply=rand(rng, re_supply_levels[1:4]),  # Lower to mid RE
+        nre_supply=rand(rng, nre_supply_levels[3:6]), # Mid to high NRE
+        population=rand(rng, population_levels),
         income=true         # High income
     )
 
     san_francisco = City(
         name="San Francisco",
-        demand=25.8,        # TWh annually (realistic for SF Bay Area)
-        re_supply=3.2,      # Current renewable capacity 
-        nre_supply=15.1,    # Natural gas and imports
-        population=875_000,
+        demand=rand(rng, demand_levels[4:6]),  # Higher demand levels
+        re_supply=rand(rng, re_supply_levels[3:6]),  # Mid to high RE
+        nre_supply=rand(rng, nre_supply_levels[5:8]), # High NRE
+        population=rand(rng, population_levels[4:6]), # Higher population
         income=true
     )
     
     memphis = City(
         name="Memphis", 
-        demand=20.0,        # Same demand as Atlanta for equity testing
-        re_supply=1.0,      # Less initial RE (disadvantaged)
-        nre_supply=7.0,     # Less initial supply overall
-        population=650_000, # Slightly larger population
+        demand=rand(rng, demand_levels[2:5]),  # Mid-range demand
+        re_supply=rand(rng, re_supply_levels[1:3]),  # Low RE (disadvantaged)
+        nre_supply=rand(rng, nre_supply_levels[2:5]), # Low to mid NRE
+        population=rand(rng, population_levels[2:5]), # Mid-range population
         income=false        # Low income
     )
     
     phoenix = City(
         name="Phoenix",
-        demand=18.0,        # Slightly less demand
-        re_supply=0.5,      # Minimal initial RE
-        nre_supply=12.0,    # But higher NRE to test dynamics
-        population=580_000,
+        demand=rand(rng, demand_levels[1:4]),  # Low to mid demand
+        re_supply=rand(rng, re_supply_levels[1:2]),  # Minimal initial RE
+        nre_supply=rand(rng, nre_supply_levels[4:7]), # Higher NRE
+        population=rand(rng, population_levels[1:4]), # Lower to mid population
         income=false        # Low income
     )
     
     seattle = City(
         name="Seattle",
-        demand=18.0,        # Same as Phoenix
-        re_supply=8.0,      # High initial RE (naturally advantaged)
-        nre_supply=4.0,     # Lower NRE
-        population=620_000,
+        demand=rand(rng, demand_levels[1:4]),  # Low to mid demand
+        re_supply=rand(rng, re_supply_levels[5:7]),  # High initial RE (naturally advantaged)
+        nre_supply=rand(rng, nre_supply_levels[1:3]), # Lower NRE
+        population=rand(rng, population_levels[2:5]), # Mid-range population
         income=true         # High income
     )
 
     detroit = City(
         name="Detroit",
-        demand=28.6,        # TWh annually (industrial city)
-        re_supply=1.8,      # Limited renewable infrastructure
-        nre_supply=20.2,    # Heavy coal/gas dependence
-        population=670_000,
+        demand=rand(rng, demand_levels[4:6]),  # Higher demand (industrial city)
+        re_supply=rand(rng, re_supply_levels[1:3]),  # Limited renewable infrastructure
+        nre_supply=rand(rng, nre_supply_levels[6:8]), # Heavy fossil fuel dependence
+        population=rand(rng, population_levels[3:6]), # Mid to high population
         income=false
     )
 
@@ -62,16 +68,15 @@ function initialize_mdp()
         cities=cities_tuned,
         numberOfCities=6,
         
-        # === TUNED COSTS FOR BALANCED OBJECTIVES ===
-        # Costs favor RE but not excessively
-        costOfAddingRE=150.0,      # Reduced from 180 to encourage RE
-        costOfAddingNRE=130.0,     # Increased from 120 to discourage NRE
-        costOfRemovingRE=100.0,    # Reduced removal cost for flexibility
-        costOfRemovingNRE=160.0,   # Higher removal cost for NRE
+        # === COSTS WITH DISCRETIZED RANDOMNESS ===
+        costOfAddingRE=rand(rng, [140.0, 150.0, 160.0, 170.0]),     # Randomized RE addition cost
+        costOfAddingNRE=rand(rng, [120.0, 130.0, 140.0, 150.0]),    # Randomized NRE addition cost
+        costOfRemovingRE=rand(rng, [90.0, 100.0, 110.0, 120.0]),    # Randomized RE removal cost
+        costOfRemovingNRE=rand(rng, [150.0, 160.0, 170.0, 180.0]),  # Randomized NRE removal cost
         
-        # Operating costs to reflect true lifecycle costs
-        operatingCostRE=[0.008, 0.010, 0.009, 0.007, 0.008, 0.010],    # Lower than original
-        operatingCostNRE=[0.045, 0.052, 0.048, 0.044, 0.045, 0.052],    # Higher than original
+        # Operating costs with discretized randomness
+        operatingCostRE=[rand(rng, [0.006, 0.008, 0.010, 0.012]) for _ in 1:6],  # Randomized RE costs
+        operatingCostNRE=[rand(rng, [0.040, 0.045, 0.050, 0.055]) for _ in 1:6], # Randomized NRE costs
         
         # === SUPPLY PARAMETERS ===
         supplyOfRE=8.0,            # Larger increments for efficiency
@@ -80,18 +85,20 @@ function initialize_mdp()
         # === TUNED REWARD WEIGHTS ===
         # More balanced weights for multiple objectives
         weightBudget=0.2,                        # Moderate budget weight
-        weightLowIncomeWithoutEnergy=-40.0,      # Strong equity penalty
-        weightPopulationWithRE=15.0,             # Strong RE incentive
+        weightLowIncomeWithoutEnergy=-50.0,      # Strong equity penalty
+        weightPopulationWithRE=25.0,             # Strong RE incentive
         
-        # Budget parameters for longer horizons
-        initialBudget=4000.0,      # Higher budget for more strategic decisions
-        discountRate=0.92,         # Slightly lower discount for long-term thinking
+       
         
         # Discretization for solving
         budgetDiscretization=250.0,    # Coarser for speed
-        maxBudget=5000.0,
-        minBudget=-1000.0,             # Allow more debt for strategic choices
+        maxBudget=1000.0,
+        minBudget=0.0,             # Allow more debt for strategic choices
         energyDiscretization=4.0,      # Larger increments
-        maxEnergyPerCity=80.0          # Higher capacity limits
+        maxEnergyPerCity=80.0,          # Higher capacity limits
+
+        # Budget parameters for longer horizons with discretized randomness
+        initialBudget=rand(rng, [250.0, 500.0, 750.0, 1000.0]),  # Discretized budget levels
+        discountRate=rand(rng, [0.90, 0.92, 0.95, 0.97]),  # Discretized discount rates
     )
 end

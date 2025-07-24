@@ -348,3 +348,22 @@ function POMDPs.action(p::EquityFirstPolicy, s::State)
     
     return doNothing()
 end
+
+# Expert Policy - Prioritizes cities with largest deficits using RE
+struct ExpertPolicy <: Policy end
+
+function POMDPs.action(p::ExpertPolicy, s::State)
+    mdp = EnergyMDP()
+    deficits = [(city.demand - city.re_supply - city.nre_supply, i) for (i, city) in enumerate(s.cities)]
+    sorted_deficits = sort(deficits, by = x -> -x[1])  # descending order by deficit
+    
+    # Find city with largest deficit
+    city_idx = sorted_deficits[1][2]
+    
+    # Check if we can afford to add RE to this city
+    if s.b >= mdp.costOfAddingRE
+        return newAction(energyType=false, actionType=true, cityIndex=city_idx)
+    else
+        return doNothing()
+    end
+end
