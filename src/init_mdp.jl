@@ -1,7 +1,4 @@
-# Tuned MDP configuration for balanced objectives
-
-# Create enhanced MDP with tuned parameters
-function create_tuned_mdp()
+function initialize_mdp()
     # More balanced city configurations for testing equity
     atlanta = City(
         name="Atlanta",
@@ -10,6 +7,15 @@ function create_tuned_mdp()
         nre_supply=8.0,     # But mostly NRE initially
         population=600_000,
         income=true         # High income
+    )
+
+    san_francisco = City(
+        name="San Francisco",
+        demand=25.8,        # TWh annually (realistic for SF Bay Area)
+        re_supply=3.2,      # Current renewable capacity 
+        nre_supply=15.1,    # Natural gas and imports
+        population=875_000,
+        income=true
     )
     
     memphis = City(
@@ -38,13 +44,23 @@ function create_tuned_mdp()
         population=620_000,
         income=true         # High income
     )
+
+    detroit = City(
+        name="Detroit",
+        demand=28.6,        # TWh annually (industrial city)
+        re_supply=1.8,      # Limited renewable infrastructure
+        nre_supply=20.2,    # Heavy coal/gas dependence
+        population=670_000,
+        income=false
+    )
+
     
-    cities_tuned = [atlanta, memphis, phoenix, seattle]
+    cities_tuned = [atlanta, memphis, phoenix, seattle, detroit, san_francisco]
     
     return EnergyMDP(
         # City configuration
         cities=cities_tuned,
-        numberOfCities=4,
+        numberOfCities=6,
         
         # === TUNED COSTS FOR BALANCED OBJECTIVES ===
         # Costs favor RE but not excessively
@@ -54,8 +70,8 @@ function create_tuned_mdp()
         costOfRemovingNRE=160.0,   # Higher removal cost for NRE
         
         # Operating costs to reflect true lifecycle costs
-        operatingCostRE=[0.008, 0.010, 0.009, 0.007],     # Lower than original
-        operatingCostNRE=[0.045, 0.052, 0.048, 0.044],    # Higher than original
+        operatingCostRE=[0.008, 0.010, 0.009, 0.007, 0.008, 0.010],    # Lower than original
+        operatingCostNRE=[0.045, 0.052, 0.048, 0.044, 0.045, 0.052],    # Higher than original
         
         # === SUPPLY PARAMETERS ===
         supplyOfRE=8.0,            # Larger increments for efficiency
@@ -79,44 +95,3 @@ function create_tuned_mdp()
         maxEnergyPerCity=80.0          # Higher capacity limits
     )
 end
-
-# Alternative MDP with enhanced reward function
-function create_enhanced_mdp()
-    mdp = create_tuned_mdp()
-    # This would use the enhanced_reward function instead of the default
-    return mdp
-end
-
-# Quick comparison MDP with minimal cities for fast Value Iteration
-function create_comparison_mdp()
-    # Just 2 cities for quick benchmarking
-    city_high = City(name="HighIncome", demand=15.0, re_supply=1.0, nre_supply=6.0, 
-                     population=500_000, income=true)
-    city_low = City(name="LowIncome", demand=15.0, re_supply=0.5, nre_supply=5.0, 
-                    population=500_000, income=false)
-    
-    return EnergyMDP(
-        cities=[city_high, city_low],
-        numberOfCities=2,
-        costOfAddingRE=140.0,
-        costOfAddingNRE=135.0,
-        costOfRemovingRE=90.0,
-        costOfRemovingNRE=150.0,
-        operatingCostRE=[0.008, 0.010],
-        operatingCostNRE=[0.045, 0.050],
-        supplyOfRE=6.0,
-        supplyOfNRE=6.0,
-        weightBudget=0.2,
-        weightLowIncomeWithoutEnergy=-35.0,
-        weightPopulationWithRE=18.0,
-        initialBudget=3000.0,
-        discountRate=0.93,
-        budgetDiscretization=300.0,
-        maxBudget=4000.0,
-        minBudget=-500.0,
-        energyDiscretization=3.0,
-        maxEnergyPerCity=60.0
-    )
-end
-
-export create_tuned_mdp, create_enhanced_mdp, create_comparison_mdp

@@ -149,7 +149,7 @@ cities = [atlanta, nyc, houston, phoenix, denver, memphis, seattle, san_antonio]
     weightLowIncomeWithoutEnergy::Float64 = -25.0  # High penalty for low-income energy deprivation
     
     # Environmental/decarbonization goals
-    weightPopulationWithRE::Float64 = 12.0  # Strong incentive for renewable energy access
+    weightPopulationWithRE::Float64 = 10.0  # Strong incentive for renewable energy access
     
 
     # Planning horizon effects

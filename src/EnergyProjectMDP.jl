@@ -3,6 +3,7 @@ module EnergyProjectMDP
 using Parameters
 using POMDPs
 using POMDPTools
+using Random
 
 
 include("mdp.jl")
@@ -15,27 +16,28 @@ export City,
 
 include("functions.jl")
 
+
+
 include("policies.jl")
+export PriorityBasedPolicy,
+       OptimizationGreedyPolicy,
+       SmartSequentialPolicy,
+       NearOptimalPolicy,
+       equity_first_action,
+       efficiency_re_action,
+       evaluate_action_lookahead
+
 export RandomEnergyPolicy,
        GreedyREPolicy,
        BalancedEnergyPolicy,
        EquityFirstPolicy
 
-include("enhanced_policies.jl")
-export PriorityBasedPolicy,
-       OptimizationGreedyPolicy,
-       SmartSequentialPolicy,
-       NearOptimalPolicy
 
-include("enhanced_reward.jl")
+include("eval_reward.jl")
 export calculate_comprehensive_metrics,
-       enhanced_reward
+       eval_reward
 
-include("tuned_mdp.jl")
-export create_tuned_mdp,
-       create_enhanced_mdp,
-       create_comparison_mdp
-
-# Academic components will be included separately in examples
+include("init_mdp.jl")
+export initialize_mdp
 
 end # module EnergyProjectMDPs
