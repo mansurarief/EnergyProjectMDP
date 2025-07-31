@@ -1,5 +1,6 @@
 using EnergyProjectMDP
 using POMDPs
+using POMDPTools
 using DiscreteValueIteration
 using Random
 using Printf
@@ -102,3 +103,5 @@ println("\n🚀 Framework ready for energy policy optimization!")
 
 # Print comprehensive comparison table at the end
 print_policy_comparison(results)
+
+
