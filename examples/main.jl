@@ -3,9 +3,11 @@ using POMDPs
 using DiscreteValueIteration
 using Random
 using Printf
+using MCTS
 
 rng = MersenneTwister(1234)
 mdp = initialize_mdp(rng)
+mdp_re = initialize_mdp(rng, 0.0001, -5.0, 100.0)
 println("Created MDP with $(mdp.numberOfCities) cities")
 println("Initial budget: \$$(mdp.initialBudget)M")
 println("State space size: $(length(states(mdp))) states")
@@ -14,8 +16,7 @@ println("Action space size: $(length(actions(mdp))) actions\n")
 # Test all policies including new stronger benchmarks
 policies_to_test = [
     ("Random", RandomEnergyPolicy(rng)),
-    ("Equality First", EquityFirstPolicy()),    
-    ("Expert", ExpertPolicy())
+    ("Expert", EquityFirstPolicy())
 ]
 
 println("Evaluating $(length(policies_to_test)) policies...")
@@ -47,7 +48,32 @@ try
     
     println("Value Iteration Performance:")
     println("  Avg Reward: $(@sprintf("%.1f ± %.1f", vi_result["total_reward_mean"], vi_result["total_reward_std"]))")
+
+    # Test MCTS
+    println("Testing MCTS Base...")
+    MCTS_solver =  MCTSSolver(n_iterations=500, depth=30, exploration_constant=10.0)
+    MCTS_policy = solve(MCTS_solver, mdp)
+    println("✅ MCTS Base converged!")
     
+    MCTS_result = evaluate_policy_comprehensive(mdp, MCTS_policy, 30, 12, rng)
+    results["MCTS Base"] = MCTS_result
+
+    println("MCTS Base Performance:")
+    println("  Avg Reward: $(@sprintf("%.1f ± %.1f", MCTS_result["total_reward_mean"], MCTS_result["total_reward_std"]))")
+
+    # Test MCTS for RE
+    println("Testing MCTS for RE...")
+    MCTS_solver_re =  MCTSSolver(n_iterations=500, depth=30, exploration_constant=10.0)
+    MCTS_policy_re = solve(MCTS_solver_re, mdp_re)
+    println("✅ MCTS RE converged!")
+    
+    MCTS_result_re = evaluate_policy_comprehensive(mdp, MCTS_policy_re, 30, 12, rng)
+    results["MCTS RE"] = MCTS_result_re
+
+    println("MCTS RE Performance:")
+    println("  Avg Reward: $(@sprintf("%.1f ± %.1f", MCTS_result_re["total_reward_mean"], MCTS_result_re["total_reward_std"]))")
+
+
     # Display reward components if available
     if haskey(vi_result, "budget_reward_sum_mean")
         println("  Reward Components:")
@@ -63,7 +89,7 @@ end
 
 
 # Compare MDP solvers if available
-mdp_solvers = filter(k -> contains(k, "Iteration"), keys(results))
+mdp_solvers = filter(k -> contains(k, "Iteration") || contains(k, "MCTS"), keys(results))
 if length(mdp_solvers) > 1
     println("\n🤖 MDP Solver Comparison:")
     for solver in mdp_solvers

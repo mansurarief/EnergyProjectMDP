@@ -1,4 +1,4 @@
-function initialize_mdp(rng::AbstractRNG)
+function initialize_mdp(rng::AbstractRNG, weightBudget=0.2, weightLowIncomeWithoutEnergy=-50.0, weightPopulationWithRE=25.0)  
     # Define discretized value ranges for randomization
     demand_levels = [15.0, 18.0, 20.0, 22.0, 25.0, 28.0]  # Discretized demand levels
     re_supply_levels = [0.0, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0]  # Discretized RE supply levels
@@ -84,9 +84,9 @@ function initialize_mdp(rng::AbstractRNG)
         
         # === TUNED REWARD WEIGHTS ===
         # More balanced weights for multiple objectives
-        weightBudget=0.2,                        # Moderate budget weight
-        weightLowIncomeWithoutEnergy=-50.0,      # Strong equity penalty
-        weightPopulationWithRE=25.0,             # Strong RE incentive
+        weightBudget=weightBudget,                        # Moderate budget weight
+        weightLowIncomeWithoutEnergy=weightLowIncomeWithoutEnergy,      # Strong equity penalty
+        weightPopulationWithRE=weightPopulationWithRE,             # Strong RE incentive
         
        
         
