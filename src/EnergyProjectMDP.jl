@@ -52,4 +52,12 @@ include("reward_analysis.jl")
 export decompose_reward,
        analyze_reward_trajectory
 
+include("visualization.jl")
+export create_city_map,
+       create_policy_comparison_chart,
+       create_energy_distribution_pie,
+       create_equity_analysis,
+       create_simulation_trajectory,
+       generate_comprehensive_report
+
 end # module EnergyProjectMDPs

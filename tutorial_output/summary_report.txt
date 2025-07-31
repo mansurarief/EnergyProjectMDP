@@ -1,0 +1,87 @@
+================================================================================
+ENERGY PROJECT MDP - ANALYSIS SUMMARY REPORT
+================================================================================
+
+MDP CONFIGURATION:
+----------------------------------------
+Number of Cities: 6
+Initial Budget: $500.0M
+Discount Rate: 0.9
+RE Supply per Action: 8.0 GWh
+NRE Supply per Action: 8.0 GWh
+Cost of Adding RE: $150.0M
+Cost of Adding NRE: $140.0M
+
+FINAL STATE ANALYSIS:
+----------------------------------------
+Final Budget: $54.3022319332855M
+Total Demand: 129.89300884634542 GWh
+Total Supply: 112.0 GWh
+  - Renewable: 38.0 GWh (33.9%)
+  - Non-Renewable: 74.0 GWh (66.1%)
+Supply-Demand Gap: -17.893008846345424 GWh
+
+CITY DETAILS:
+----------------------------------------
+1. Atlanta (High Income)
+   Population: 650K
+   Demand: 21.067188146009034 GWh
+   Supply: 17.0 GWh (RE: 2.0, NRE: 15.0)
+   ⚠️  Deficit: 4.067188146009034 GWh
+
+2. Memphis (Low Income)
+   Population: 580K
+   Demand: 18.23845469942227 GWh
+   Supply: 26.0 GWh (RE: 18.0, NRE: 8.0)
+   ✅ Fully Supplied
+
+3. Phoenix (Low Income)
+   Population: 650K
+   Demand: 19.840341369850066 GWh
+   Supply: 21.0 GWh (RE: 9.0, NRE: 12.0)
+   ✅ Fully Supplied
+
+4. Seattle (High Income)
+   Population: 580K
+   Demand: 23.293713125459895 GWh
+   Supply: 10.0 GWh (RE: 6.0, NRE: 4.0)
+   ⚠️  Deficit: 13.293713125459895 GWh
+
+5. Detroit (Low Income)
+   Population: 620K
+   Demand: 26.770732951895248 GWh
+   Supply: 15.0 GWh (RE: 0.0, NRE: 15.0)
+   ⚠️  Deficit: 11.770732951895248 GWh
+
+6. San Francisco (High Income)
+   Population: 650K
+   Demand: 20.6825785537089 GWh
+   Supply: 23.0 GWh (RE: 3.0, NRE: 20.0)
+   ✅ Fully Supplied
+
+POLICY PERFORMANCE COMPARISON:
+----------------------------------------
+Greedy RE:
+  Total Reward: -14.0 ± 113.1
+
+Balanced:
+  Total Reward: 18.1 ± 78.2
+
+Random:
+  Total Reward: 35.0 ± 26.2
+
+Expert:
+  Total Reward: -75.7 ± 81.1
+
+Equity First:
+  Total Reward: 78.1 ± 63.5
+
+EQUITY ANALYSIS:
+----------------------------------------
+Low-Income Cities Unmet Demand: 11.770732951895248 GWh
+High-Income Cities Unmet Demand: 17.36090127146893 GWh
+✅ Equity Status: Reasonable distribution
+
+================================================================================
+Report generated on: 2025-07-30T19:43:46.980
+================================================================================

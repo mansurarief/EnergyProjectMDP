@@ -103,8 +103,17 @@ function print_policy_comparison(results::Dict{String, Dict{String, Float64}})
     for (policy_name, metrics) in sorted_policies
         row = @sprintf("%-16s", policy_name)
         for (metric_base, _, direction) in key_metrics
-            mean_val = metrics["$(metric_base)_mean"]
-            std_val = metrics["$(metric_base)_std"]
+            # Check if metric exists
+            mean_key = "$(metric_base)_mean"
+            std_key = "$(metric_base)_std"
+            
+            if !haskey(metrics, mean_key)
+                row *= " | " * @sprintf("%14s", "N/A")
+                continue
+            end
+            
+            mean_val = metrics[mean_key]
+            std_val = haskey(metrics, std_key) ? metrics[std_key] : 0.0
             
             # Special handling for different metrics
             if contains(metric_base, "pop_unserved")
@@ -140,20 +149,22 @@ function print_policy_comparison(results::Dict{String, Dict{String, Float64}})
     # Legend for arrows
     println("\nLegend: ↑ = higher is better, ↓ = lower is better")
     
-    # Summary statistics
-    println("\n" * "="^60)
-    println("DISPARITY ANALYSIS (Top 3 Policies by Reward)")
-    println("="^60)
-    
-    for (i, (policy_name, metrics)) in enumerate(sorted_policies[1:min(3, length(sorted_policies))])
-        low_cities = metrics["low_income_cities_unserved_mean"]
-        high_cities = metrics["high_income_cities_unserved_mean"]
-        low_pop = metrics["low_income_pop_unserved_mean"] / 1_000_000
-        high_pop = metrics["high_income_pop_unserved_mean"] / 1_000_000
+    # Summary statistics - only if disparity metrics exist
+    if !isempty(sorted_policies) && haskey(sorted_policies[1][2], "low_income_cities_unserved_mean")
+        println("\n" * "="^60)
+        println("DISPARITY ANALYSIS (Top 3 Policies by Reward)")
+        println("="^60)
         
-        println("#$i. $policy_name:")
-        println("    Unserved cities: Low-income = $(@sprintf("%.1f", low_cities)), High-income = $(@sprintf("%.1f", high_cities))")
-        println("    Unserved population: Low-income = $(@sprintf("%.1f", low_pop))M, High-income = $(@sprintf("%.1f", high_pop))M")
-        println()
+        for (i, (policy_name, metrics)) in enumerate(sorted_policies[1:min(3, length(sorted_policies))])
+            low_cities = get(metrics, "low_income_cities_unserved_mean", 0.0)
+            high_cities = get(metrics, "high_income_cities_unserved_mean", 0.0)
+            low_pop = get(metrics, "low_income_pop_unserved_mean", 0.0) / 1_000_000
+            high_pop = get(metrics, "high_income_pop_unserved_mean", 0.0) / 1_000_000
+            
+            println("#$i. $policy_name:")
+            println("    Unserved cities: Low-income = $(@sprintf("%.1f", low_cities)), High-income = $(@sprintf("%.1f", high_cities))")
+            println("    Unserved population: Low-income = $(@sprintf("%.1f", low_pop))M, High-income = $(@sprintf("%.1f", high_pop))M")
+            println()
+        end
     end
 end
