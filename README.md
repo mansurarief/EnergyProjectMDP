@@ -11,6 +11,8 @@
 
 EnergyProjectMDP.jl provides a comprehensive framework for modeling and optimizing energy resource allocation across cities with different socioeconomic characteristics. The package uses Markov Decision Processes (MDPs) to balance renewable energy deployment, equity considerations, and budget constraints.
 
+![alt text](renewable_energy_map_initial.png)
+
 ### 🌟 Key Features
 
 - **🏙️ Multi-City Energy Modeling**: Model energy supply and demand across multiple cities
