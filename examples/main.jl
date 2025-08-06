@@ -5,6 +5,7 @@ using DiscreteValueIteration
 using Random
 using Printf
 using MCTS
+using Plots
 
 rng = MersenneTwister(1234)
 mdp = initialize_mdp(rng)
@@ -103,5 +104,49 @@ println("\n🚀 Framework ready for energy policy optimization!")
 
 # Print comprehensive comparison table at the end
 print_policy_comparison(results)
+
+colors = [:blue, :green, :orange, :red, :purple]
+
+policies = ["MCTS Base", "Value Iteration", "MCTS RE", "Expert", "Random"]
+rewards = [527, 373, 100, 580, 273]
+re_stds = [80, 94, 97, 111, 57]
+
+bar(policies, rewards, yerror=re_stds, title="Average Reward by Policy", 
+    legend=false, ylabel="Reward", color=colors)
+
+avg_rewards = [527, 373, 100, 580, 273]
+avg_reward_err = [80, 94, 97, 111, 57]
+
+re_percent = [15.9, 14.6, 28.6, 32.9, 22.0]
+re_err = [3.2, 0.0, 3.2, 2.1, 4.9]
+
+budget_used = [127, 145, 364, 426, 442]
+budget_err = [112, 144, 374, 553, 440]
+
+low_inc_cities = [2.2, 2.0, 1.9, 1.9, 2.2]
+low_inc_cities_err = [0.7, 0.0, 0.5, 0.4, 0.9]
+
+low_inc_pop = [0.54, 0.47, 0.47, 0.20, 0.58]
+low_inc_pop_err = [0.18, 0.03, 0.12, 0.10, 0.28]
+
+high_inc_pop = [0.40, 0.40, 0.37, 0.40, 0.37]
+high_inc_pop_err = [0.05, 0.05, 0.13, 0.05, 0.16]
+
+# Create subplots with consistent colors
+p1 = bar(policies, avg_rewards, yerror=avg_reward_err, legend=false,
+    title="Avg Reward ↑", ylabel="Reward", rotation=45, color=colors)
+p2 = bar(policies, re_percent, yerror=re_err, legend=false,
+    title="RE % ↑", ylabel="%", rotation=45, color=colors)
+p3 = bar(policies, budget_used, yerror=budget_err, legend=false,
+    title="Budget Used ↑", ylabel="Units", rotation=45, color=colors)
+p4 = bar(policies, low_inc_cities, yerror=low_inc_cities_err, legend=false,
+    title="Low-Inc Cities ↓", ylabel="#", rotation=45, color=colors)
+p5 = bar(policies, low_inc_pop, yerror=low_inc_pop_err, legend=false,
+    title="Low-Inc Pop (M) ↓", ylabel="Millions", rotation=45, color=colors)
+p6 = bar(policies, high_inc_pop, yerror=high_inc_pop_err, legend=false,
+    title="High-Inc Pop (M) ↓", ylabel="Millions", rotation=45, color=colors)
+
+# Display in a 2x3 grid layout
+plot(p1, p2, p3, p4, p5, p6, layout=(2, 3), size=(1200, 600), titlefontsize=10)
 
 
