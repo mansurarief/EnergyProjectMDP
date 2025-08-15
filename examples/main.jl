@@ -53,7 +53,7 @@ try
 
     # Test MCTS
     println("Testing MCTS Base...")
-    MCTS_solver =  MCTSSolver(n_iterations=500, depth=30, exploration_constant=10.0)
+    MCTS_solver =  MCTSSolver(n_iterations=1000, depth=50, exploration_constant=15.0)
     MCTS_policy = solve(MCTS_solver, mdp)
     println("✅ MCTS Base converged!")
     
@@ -134,19 +134,25 @@ high_inc_pop_err = [0.05, 0.05, 0.13, 0.05, 0.16]
 
 # Create subplots with consistent colors
 p1 = bar(policies, avg_rewards, yerror=avg_reward_err, legend=false,
-    title="Avg Reward ↑", ylabel="Reward", rotation=45, color=colors)
+    title="Avg Reward ↑", ylabel="Reward", rotation=45, color=colors);
 p2 = bar(policies, re_percent, yerror=re_err, legend=false,
-    title="RE % ↑", ylabel="%", rotation=45, color=colors)
+    title="RE % ↑", ylabel="%", rotation=45, color=colors);
 p3 = bar(policies, budget_used, yerror=budget_err, legend=false,
-    title="Budget Used ↑", ylabel="Units", rotation=45, color=colors)
+    title="Budget Used ↑", ylabel="Units", rotation=45, color=colors);
 p4 = bar(policies, low_inc_cities, yerror=low_inc_cities_err, legend=false,
-    title="Low-Inc Cities ↓", ylabel="#", rotation=45, color=colors)
+    title="Low-Inc Cities ↓", ylabel="#", rotation=45, color=colors);
 p5 = bar(policies, low_inc_pop, yerror=low_inc_pop_err, legend=false,
-    title="Low-Inc Pop (M) ↓", ylabel="Millions", rotation=45, color=colors)
+    title="Low-Inc Pop (M) ↓", ylabel="Millions", rotation=45, color=colors);
 p6 = bar(policies, high_inc_pop, yerror=high_inc_pop_err, legend=false,
-    title="High-Inc Pop (M) ↓", ylabel="Millions", rotation=45, color=colors)
+    title="High-Inc Pop (M) ↓", ylabel="Millions", rotation=45, color=colors);
 
 # Display in a 2x3 grid layout
-plot(p1, p2, p3, p4, p5, p6, layout=(2, 3), size=(1200, 600), titlefontsize=10)
+plot(p1, p2, p3, p4, p5, p6, layout=(2, 3), size=(1200, 700), titlefontsize=12, 
+     left_margin=5Plots.mm, right_margin=5Plots.mm, 
+     top_margin=5Plots.mm, bottom_margin=5Plots.mm)
+
+# Save the plot to a file
+savefig("figs/policy_comparison.pdf")
+
 
 
